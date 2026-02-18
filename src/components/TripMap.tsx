@@ -578,14 +578,19 @@ export default function TripMap() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/trip')
-      .then(res => res.json())
-      .then(data => {
-        setConfig(data.config);
-        setMilestones(data.milestones || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    const fetchData = () => {
+      fetch('/api/trip')
+        .then(res => res.json())
+        .then(data => {
+          setConfig(data.config);
+          setMilestones(data.milestones || []);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    };
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const positions = useMemo(() => {
