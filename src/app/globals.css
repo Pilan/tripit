@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-fun: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;
+  --font-fun: 'Calibri', 'Gill Sans', 'Segoe UI', sans-serif;
   --color-road: #8B7355;
   --color-grass: #7EC850;
   --color-sky: #87CEEB;
