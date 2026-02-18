@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --font-fun: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;
+  --color-road: #8B7355;
+  --color-grass: #7EC850;
+  --color-sky: #87CEEB;
+  --color-milestone-reached: #FFD700;
+  --color-milestone-unreached: #B0B0B0;
+}
+
+body {
+  font-family: var(--font-fun);
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5)); }
+  50% { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.9)); }
+}
+
+@keyframes dash-move {
+  to { stroke-dashoffset: -20; }
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-dash {
+  animation: dash-move 1s linear infinite;
+}
