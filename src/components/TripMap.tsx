@@ -559,15 +559,21 @@ function CityMarker({ x, y, name, reached, isGoal, isStart, description }: {
   );
 }
 function BusIcon({ x, y }: { x: number; y: number }) {
+  // Draw bus directly at absolute SVG coordinates, no nested transforms
+  const bx = x - 20; // center horizontally
+  const by = y - 15; // center vertically
   return (
-    <g transform={`translate(${x - 15},${y - 10})`} className="animate-bounce-gentle">
-      <rect x="0" y="0" width="30" height="18" rx="5" fill="#FF6B6B" stroke="#CC4444" strokeWidth="1.5" />
-      <rect x="4" y="3" width="8" height="7" rx="2" fill="#87CEEB" stroke="#5BA3C9" strokeWidth="1" />
-      <rect x="15" y="3" width="8" height="7" rx="2" fill="#87CEEB" stroke="#5BA3C9" strokeWidth="1" />
-      <circle cx="7" cy="20" r="3.5" fill="#333" stroke="#555" strokeWidth="1" />
-      <circle cx="23" cy="20" r="3.5" fill="#333" stroke="#555" strokeWidth="1" />
-      <circle cx="7" cy="20" r="1.5" fill="#999" />
-      <circle cx="23" cy="20" r="1.5" fill="#999" />
+    <g>
+      {/* Bus body */}
+      <rect x={bx} y={by} width="40" height="24" rx="6" fill="#FF6B6B" stroke="#CC4444" strokeWidth="2" />
+      {/* Windows */}
+      <rect x={bx + 5} y={by + 4} width="11" height="10" rx="2" fill="#87CEEB" stroke="#5BA3C9" strokeWidth="1" />
+      <rect x={bx + 20} y={by + 4} width="11" height="10" rx="2" fill="#87CEEB" stroke="#5BA3C9" strokeWidth="1" />
+      {/* Wheels */}
+      <circle cx={bx + 10} cy={by + 27} r="4.5" fill="#333" stroke="#555" strokeWidth="1.5" />
+      <circle cx={bx + 30} cy={by + 27} r="4.5" fill="#333" stroke="#555" strokeWidth="1.5" />
+      <circle cx={bx + 10} cy={by + 27} r="2" fill="#999" />
+      <circle cx={bx + 30} cy={by + 27} r="2" fill="#999" />
     </g>
   );
 }
@@ -676,30 +682,13 @@ export default function TripMap() {
 
   const roadRef = useRef<SVGPathElement>(null);
   const [realPathLength, setRealPathLength] = useState(0);
-  const [busPosOnPath, setBusPosOnPath] = useState<{ x: number; y: number } | null>(null);
 
-  // Compute bus position using a temporary SVG path element
-  // This avoids ref timing issues by creating an off-screen element
+  // Measure the real SVG path length for the progress dasharray
   useEffect(() => {
-    if (!roadPath || progressPathLength <= 0) {
-      setBusPosOnPath(null);
-      setRealPathLength(0);
-      return;
+    if (roadRef.current) {
+      setRealPathLength(roadRef.current.getTotalLength());
     }
-    // Create a temporary SVG to measure the path
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    pathEl.setAttribute('d', roadPath);
-    svg.appendChild(pathEl);
-    document.body.appendChild(svg);
-    const total = pathEl.getTotalLength();
-    setRealPathLength(total);
-    if (total > 0) {
-      const pt = pathEl.getPointAtLength(progressPathLength * total);
-      setBusPosOnPath({ x: pt.x, y: pt.y });
-    }
-    document.body.removeChild(svg);
-  }, [roadPath, progressPathLength]);
+  });
 
   if (loading) {
     return (
@@ -789,7 +778,9 @@ export default function TripMap() {
             <CityMarker key={m.id || i} x={m.pos.x} y={m.pos.y} name={m.name} reached={config.current_amount >= m.cost} isGoal={i === arr.length - 1} description={m.description} />
           ))}
 
-          {config && config.current_amount > 0 && busPosOnPath && <BusIcon x={busPosOnPath.x} y={busPosOnPath.y} />}
+          {config && config.current_amount > 0 && busPosition.x > 0 && busPosition.y > 0 && (
+            <BusIcon x={busPosition.x} y={busPosition.y} />
+          )}
         </svg>
       </div>
 
