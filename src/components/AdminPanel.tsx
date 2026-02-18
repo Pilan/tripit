@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface Milestone {
   name: string;
@@ -140,6 +140,29 @@ export default function AdminPanel() {
     setMilestones(updated);
   };
 
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+
+  const handleDragStart = (index: number) => {
+    dragItem.current = index;
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    dragOverItem.current = index;
+  };
+
+  const handleDrop = () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === dragOverItem.current) return;
+    const updated = [...milestones];
+    const [dragged] = updated.splice(dragItem.current, 1);
+    updated.splice(dragOverItem.current, 0, dragged);
+    setMilestones(updated);
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
   useEffect(() => {
     // Try loading config in case already logged in
     fetch('/api/admin/config').then(res => {
@@ -261,19 +284,15 @@ export default function AdminPanel() {
           <h2 className="text-2xl font-bold mb-4 text-teal-700">📍 Milestones</h2>
           <div className="space-y-2">
             {milestones.map((m, i) => (
-              <div key={i} className="flex gap-2 items-center bg-white/60 p-3 rounded-xl">
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => moveMilestone(i, -1)}
-                    className="text-xs bg-gray-100 rounded px-1 hover:bg-gray-200 text-gray-500"
-                    disabled={i === 0}
-                  >▲</button>
-                  <button
-                    onClick={() => moveMilestone(i, 1)}
-                    className="text-xs bg-gray-100 rounded px-1 hover:bg-gray-200 text-gray-500"
-                    disabled={i === milestones.length - 1}
-                  >▼</button>
-                </div>
+              <div
+                key={i}
+                draggable
+                onDragStart={() => handleDragStart(i)}
+                onDragOver={(e) => handleDragOver(e, i)}
+                onDrop={handleDrop}
+                className="flex gap-2 items-center bg-white/60 p-3 rounded-xl cursor-grab active:cursor-grabbing hover:bg-white/80 transition-colors"
+              >
+                <span className="text-gray-300 text-lg select-none" title="Drag to reorder">⠿</span>
                 <span className="text-gray-400 font-bold w-6 text-sm">{i + 1}</span>
                 <input
                   placeholder="Name"
