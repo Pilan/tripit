@@ -4,6 +4,8 @@ import { getTripConfig, getMilestones, upsertTripConfig, setMilestones } from '@
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

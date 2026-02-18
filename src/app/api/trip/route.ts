@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getTripConfig, getMilestones, seedFromConfig } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import fs from 'fs';
 import path from 'path';
 

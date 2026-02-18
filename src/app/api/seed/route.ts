@@ -3,6 +3,8 @@ import { seedFromConfig } from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   const configPath = path.join(process.cwd(), 'trip-config.json');
 
