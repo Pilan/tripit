@@ -674,10 +674,31 @@ export default function TripMap() {
 
   const roadRef = useRef<SVGPathElement>(null);
   const [realPathLength, setRealPathLength] = useState(0);
+  const [busPosOnPath, setBusPosOnPath] = useState<{ x: number; y: number } | null>(null);
   const roadRefCallback = useCallback((node: SVGPathElement | null) => {
     roadRef.current = node;
-    if (node) setRealPathLength(node.getTotalLength());
-  }, [roadPath]);
+    if (node) {
+      const total = node.getTotalLength();
+      setRealPathLength(total);
+      if (progressPathLength > 0 && total > 0) {
+        const pt = node.getPointAtLength(progressPathLength * total);
+        setBusPosOnPath({ x: pt.x, y: pt.y });
+      } else {
+        setBusPosOnPath(null);
+      }
+    }
+  }, [roadPath, progressPathLength]);
+
+  // Update bus position when progress changes and road ref exists
+  useEffect(() => {
+    if (roadRef.current && progressPathLength > 0) {
+      const total = roadRef.current.getTotalLength();
+      const pt = roadRef.current.getPointAtLength(progressPathLength * total);
+      setBusPosOnPath({ x: pt.x, y: pt.y });
+    } else {
+      setBusPosOnPath(null);
+    }
+  }, [progressPathLength]);
 
   if (loading) {
     return (
@@ -767,7 +788,7 @@ export default function TripMap() {
             <CityMarker key={m.id || i} x={m.pos.x} y={m.pos.y} name={m.name} reached={config.current_amount >= m.cost} isGoal={i === arr.length - 1} description={m.description} />
           ))}
 
-          {config && config.current_amount > 0 && busPosition.x > 50 && busPosition.y > 30 && <BusIcon x={busPosition.x} y={busPosition.y} />}
+          {config && config.current_amount > 0 && busPosOnPath && <BusIcon x={busPosOnPath.x} y={busPosOnPath.y} />}
         </svg>
       </div>
 
