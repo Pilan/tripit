@@ -84,7 +84,7 @@ const TREES = [
   { ...geo(20, 64), scale: 0.5 },
   { ...geo(16, 61), scale: 0.6 },
   { ...geo(15, 60), scale: 0.5 },
-  { ...geo(19, 62.5), scale: 0.4 },
+  { ...geo(16.5, 62.5), scale: 0.4 },
   { ...geo(10, 51), scale: 0.6 },
   { ...geo(14, 50.5), scale: 0.5 },
   { ...geo(20, 52), scale: 0.5 },
@@ -762,7 +762,7 @@ export default function TripMap() {
             <CityMarker key={m.id || i} x={m.pos.x} y={m.pos.y} name={m.name} reached={config.current_amount >= m.cost} isGoal={i === arr.length - 1} description={m.description} />
           ))}
 
-          {progressPathLength > 0 && <BusIcon x={busPosition.x} y={busPosition.y} />}
+          {progressPathLength > 0 && busPosition.x > 0 && busPosition.y > 0 && <BusIcon x={busPosition.x} y={busPosition.y} />}
         </svg>
       </div>
 
