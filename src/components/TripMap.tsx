@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 
 interface Milestone {
   id: number;
@@ -617,9 +617,11 @@ export default function TripMap() {
     for (let i = 1; i < pts.length; i++) {
       const prev = pts[i - 1];
       const curr = pts[i];
-      const cpx1 = prev.x + (Math.random() * 0.2 - 0.1) * 40 + 20;
+      // Deterministic offsets based on index for consistent road curves
+      const offset = ((i * 7 + 3) % 11 - 5) * 0.02; // small deterministic variation
+      const cpx1 = prev.x + offset * 40 + 20;
       const cpy1 = prev.y + (curr.y - prev.y) * 0.4;
-      const cpx2 = curr.x - (Math.random() * 0.2 - 0.1) * 40 - 20;
+      const cpx2 = curr.x - offset * 40 - 20;
       const cpy2 = prev.y + (curr.y - prev.y) * 0.6;
       d += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${curr.x},${curr.y}`;
     }
@@ -675,30 +677,29 @@ export default function TripMap() {
   const roadRef = useRef<SVGPathElement>(null);
   const [realPathLength, setRealPathLength] = useState(0);
   const [busPosOnPath, setBusPosOnPath] = useState<{ x: number; y: number } | null>(null);
-  const roadRefCallback = useCallback((node: SVGPathElement | null) => {
-    roadRef.current = node;
-    if (node) {
-      const total = node.getTotalLength();
-      setRealPathLength(total);
-      if (progressPathLength > 0 && total > 0) {
-        const pt = node.getPointAtLength(progressPathLength * total);
-        setBusPosOnPath({ x: pt.x, y: pt.y });
-      } else {
-        setBusPosOnPath(null);
-      }
-    }
-  }, [roadPath, progressPathLength]);
 
-  // Update bus position when progress changes and road ref exists
+  // Compute bus position using a temporary SVG path element
+  // This avoids ref timing issues by creating an off-screen element
   useEffect(() => {
-    if (roadRef.current && progressPathLength > 0) {
-      const total = roadRef.current.getTotalLength();
-      const pt = roadRef.current.getPointAtLength(progressPathLength * total);
-      setBusPosOnPath({ x: pt.x, y: pt.y });
-    } else {
+    if (!roadPath || progressPathLength <= 0) {
       setBusPosOnPath(null);
+      setRealPathLength(0);
+      return;
     }
-  }, [progressPathLength]);
+    // Create a temporary SVG to measure the path
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    pathEl.setAttribute('d', roadPath);
+    svg.appendChild(pathEl);
+    document.body.appendChild(svg);
+    const total = pathEl.getTotalLength();
+    setRealPathLength(total);
+    if (total > 0) {
+      const pt = pathEl.getPointAtLength(progressPathLength * total);
+      setBusPosOnPath({ x: pt.x, y: pt.y });
+    }
+    document.body.removeChild(svg);
+  }, [roadPath, progressPathLength]);
 
   if (loading) {
     return (
@@ -771,7 +772,7 @@ export default function TripMap() {
 
           {roadPath && (
             <>
-              <path ref={roadRefCallback} d={roadPath} fill="none" stroke="#C4A87C" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+              <path ref={roadRef} d={roadPath} fill="none" stroke="#C4A87C" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
               <path d={roadPath} fill="none" stroke="white" strokeWidth="2" strokeDasharray="8,8" opacity="0.5" className="animate-dash" />
             </>
           )}
